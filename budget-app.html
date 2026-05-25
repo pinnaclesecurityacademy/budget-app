@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0f">
+<title>Chris & Saua — Budget</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c27;
+    --border: #2a2a3a;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e97b;
+    --accent4: #f7971e;
+    --text: #f0f0f8;
+    --muted: #7070a0;
+    --danger: #ff4757;
+    --success: #2ed573;
+    --warn: #ffa502;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 15px; min-height: 100vh; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(ellipse at 20% 20%, rgba(108,99,255,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(255,101,132,0.06) 0%, transparent 50%); pointer-events: none; z-index: 0; }
+  #app { position: relative; z-index: 1; }
+
+  .header { padding: 20px 20px 0; display: flex; align-items: center; justify-content: space-between; }
+  .header-title { font-family: var(--font-display); font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .header-title span { color: var(--accent); }
+  .fortnight-badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 500; color: var(--muted); cursor: pointer; white-space: nowrap; }
+
+  .nav { display: flex; gap: 6px; padding: 16px 20px; overflow-x: auto; scrollbar-width: none; }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav-btn { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-family: var(--font-body); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .nav-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .screen { display: none; padding: 0 20px 100px; animation: fadeUp 0.3s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; }
+  .card-title { font-family: var(--font-display); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 14px; }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; position: relative; overflow: hidden; }
+  .stat-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .stat-card.income::after { background: var(--accent3); }
+  .stat-card.expenses::after { background: var(--accent2); }
+  .stat-card.surplus::after { background: var(--accent); }
+  .stat-card.savings::after { background: var(--accent4); }
+  .stat-label { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .stat-value { font-family: var(--font-display); font-size: 22px; font-weight: 800; letter-spacing: -1px; }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .stat-card.income .stat-value { color: var(--accent3); }
+  .stat-card.expenses .stat-value { color: var(--accent2); }
+  .stat-card.surplus .stat-value { color: var(--accent); }
+  .stat-card.savings .stat-value { color: var(--accent4); }
+
+  .period-toggle { display: flex; background: var(--surface2); border-radius: 10px; padding: 3px; margin-bottom: 16px; }
+  .period-btn { flex: 1; padding: 8px; border-radius: 8px; border: none; background: transparent; color: var(--muted); font-family: var(--font-body); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .period-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+
+  .chart-container { height: 200px; display: flex; align-items: flex-end; gap: 8px; padding: 10px 0 30px; position: relative; overflow-x: auto; scrollbar-width: none; }
+  .chart-container::-webkit-scrollbar { display: none; }
+  .chart-bar-group { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 50px; flex: 1; }
+  .chart-bars { display: flex; align-items: flex-end; gap: 3px; height: 160px; }
+  .chart-bar { width: 18px; border-radius: 4px 4px 0 0; transition: height 0.5s cubic-bezier(0.34,1.56,0.64,1); min-height: 2px; }
+  .chart-bar.income-bar { background: var(--accent3); }
+  .chart-bar.expense-bar { background: var(--accent2); }
+  .chart-label { font-size: 10px; color: var(--muted); text-align: center; margin-top: 6px; }
+  .chart-legend { display: flex; gap: 16px; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .category-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .category-name { font-size: 13px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .category-bar-track { flex: 2; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .category-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+  .category-amount { font-size: 13px; font-weight: 500; text-align: right; min-width: 60px; }
+  .category-pct { font-size: 11px; color: var(--muted); min-width: 36px; text-align: right; }
+
+  .input-group { margin-bottom: 14px; }
+  .input-label { font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.8px; }
+  .input-row { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; transition: border-color 0.2s; }
+  .input-row:focus-within { border-color: var(--accent); }
+  .input-prefix { color: var(--muted); font-size: 16px; font-weight: 300; }
+  .input-row input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font-display); font-size: 20px; font-weight: 700; width: 100%; }
+  .input-row input::placeholder { color: var(--border); }
+
+  .expense-item { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 8px; transition: border-color 0.2s; }
+  .expense-item:focus-within { border-color: rgba(108,99,255,0.4); }
+  .expense-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .expense-icon-btn { width: 36px; height: 36px; border-radius: 8px; background: rgba(108,99,255,0.12); border: 1px solid transparent; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; cursor: pointer; transition: border-color 0.2s; }
+  .expense-icon-btn:hover { border-color: var(--accent); }
+  .expense-name-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font-body); font-size: 14px; font-weight: 500; }
+  .expense-name-input::placeholder { color: var(--muted); }
+  .expense-amount-row { display: flex; align-items: center; gap: 8px; }
+  .expense-dollar { color: var(--muted); font-size: 14px; }
+  .expense-amount-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font-display); font-size: 18px; font-weight: 700; }
+  .expense-amount-input::placeholder { color: var(--border); }
+  .expense-freq-select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-family: var(--font-body); font-size: 12px; padding: 4px 8px; outline: none; cursor: pointer; }
+
+  .add-btn { width: 100%; padding: 12px; border-radius: var(--radius-sm); border: 1px dashed var(--border); background: transparent; color: var(--muted); font-family: var(--font-body); font-size: 13px; cursor: pointer; transition: all 0.2s; margin-top: 4px; }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .section-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .section-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; }
+  .section-total { margin-left: auto; font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--accent2); }
+
+  .debt-item { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 8px; }
+  .debt-name-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .debt-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font-body); font-size: 14px; font-weight: 500; }
+  .debt-input::placeholder { color: var(--muted); }
+  .debt-numbers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .mini-input-group { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+  .mini-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .mini-input { background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font-display); font-size: 16px; font-weight: 700; width: 100%; }
+  .mini-input::placeholder { color: var(--border); }
+  .debt-payoff { font-size: 12px; color: var(--accent4); margin-top: 6px; font-weight: 500; }
+
+  .surplus-amount { font-family: var(--font-display); font-size: 40px; font-weight: 800; letter-spacing: -2px; color: var(--accent); text-align: center; padding: 20px 0 10px; }
+  .surplus-sub { text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .allocation-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .alloc-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .alloc-label { flex: 1; font-size: 13px; }
+  .alloc-pct-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; width: 54px; text-align: center; color: var(--text); font-family: var(--font-display); font-size: 14px; font-weight: 700; outline: none; }
+  .alloc-amount { font-family: var(--font-display); font-size: 14px; font-weight: 700; min-width: 70px; text-align: right; }
+  .alloc-bar-track { height: 4px; background: var(--surface2); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+  .alloc-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
+
+  .forecast-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .forecast-row:last-child { border-bottom: none; }
+  .forecast-label { font-size: 13px; color: var(--muted); }
+  .forecast-values { display: flex; gap: 16px; }
+  .forecast-val { text-align: right; }
+  .forecast-period { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .forecast-num { font-family: var(--font-display); font-size: 14px; font-weight: 700; }
+  .forecast-num.positive { color: var(--accent3); }
+  .forecast-num.negative { color: var(--accent2); }
+  .forecast-num.neutral { color: var(--text); }
+
+  .rec-item { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .rec-item:last-child { border-bottom: none; }
+  .rec-icon { font-size: 20px; flex-shrink: 0; }
+  .rec-content { flex: 1; }
+  .rec-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .rec-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .rec-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  .rec-tag.reduce { background: rgba(255,71,87,0.2); color: var(--danger); }
+  .rec-tag.good { background: rgba(46,213,115,0.2); color: var(--success); }
+  .rec-tag.warning { background: rgba(255,165,2,0.2); color: var(--warn); }
+
+  .history-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .history-date { font-size: 13px; font-weight: 500; }
+  .history-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .history-surplus { font-family: var(--font-display); font-size: 16px; font-weight: 700; }
+
+  .whatif-row { background: rgba(108,99,255,0.08); border: 1px solid rgba(108,99,255,0.2); border-radius: var(--radius-sm); padding: 14px; margin-top: 12px; }
+  .whatif-title { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+  .whatif-input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .whatif-input { width: 80px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-family: var(--font-display); font-size: 16px; font-weight: 700; outline: none; text-align: center; }
+  .whatif-text { font-size: 13px; color: var(--muted); }
+  .whatif-result { font-size: 13px; color: var(--accent3); font-weight: 600; }
+
+  .save-btn { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #fff; border: none; border-radius: 50px; padding: 16px 40px; font-family: var(--font-display); font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 30px rgba(108,99,255,0.4); transition: all 0.2s; z-index: 100; letter-spacing: 0.5px; }
+  .save-btn:active { transform: translateX(-50%) scale(0.96); }
+
+  .delete-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 4px; transition: color 0.2s; flex-shrink: 0; }
+  .delete-btn:hover { color: var(--danger); }
+
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 20px; font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.3s; z-index: 200; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Emoji picker */
+  .emoji-picker { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 16px; z-index: 400; transform: translateY(100%); transition: transform 0.3s ease; max-height: 60vh; overflow-y: auto; }
+  .emoji-picker.open { transform: translateY(0); }
+  .emoji-picker-title { font-family: var(--font-display); font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+  .emoji-opt { font-size: 22px; text-align: center; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: background 0.15s; border: none; background: transparent; }
+  .emoji-opt:hover { background: var(--surface2); }
+  .emoji-overlay { display: none; position: fixed; inset: 0; z-index: 399; }
+  .emoji-overlay.open { display: block; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; align-items: flex-end; }
+  .modal-overlay.open { display: flex; }
+  .modal-sheet { background: var(--surface); border-radius: 20px 20px 0 0; padding: 20px; width: 100%; animation: slideUp 0.3s ease; }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-title { font-family: var(--font-display); font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+  .modal-btn { width: 100%; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: var(--font-body); font-size: 14px; font-weight: 500; cursor: pointer; margin-bottom: 8px; text-align: left; transition: all 0.2s; }
+  .modal-btn.cancel { color: var(--danger); border-color: transparent; background: transparent; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="header">
+    <div class="header-title">Chris <span>&</span> Saua</div>
+    <div class="fortnight-badge" id="fortnightLabel" onclick="openFortnightModal()">📅 Loading...</div>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showScreen('dashboard', this)">Dashboard</button>
+    <button class="nav-btn" onclick="showScreen('income', this)">Income</button>
+    <button class="nav-btn" onclick="showScreen('expenses', this)">Expenses</button>
+    <button class="nav-btn" onclick="showScreen('debts', this)">Debts</button>
+    <button class="nav-btn" onclick="showScreen('surplus', this)">Surplus</button>
+    <button class="nav-btn" onclick="showScreen('forecast', this)">Forecast</button>
+    <button class="nav-btn" onclick="showScreen('history', this)">History</button>
+  </nav>
+
+  <!-- DASHBOARD -->
+  <div class="screen active" id="screen-dashboard">
+    <div class="stats-grid">
+      <div class="stat-card income"><div class="stat-label">Income</div><div class="stat-value" id="dash-income">$0</div><div class="stat-sub" id="dash-income-period">fortnightly</div></div>
+      <div class="stat-card expenses"><div class="stat-label">Expenses</div><div class="stat-value" id="dash-expenses">$0</div><div class="stat-sub" id="dash-expenses-period">fortnightly</div></div>
+      <div class="stat-card surplus"><div class="stat-label">Surplus</div><div class="stat-value" id="dash-surplus">$0</div><div class="stat-sub" id="dash-surplus-period">fortnightly</div></div>
+      <div class="stat-card savings"><div class="stat-label">Savings Rate</div><div class="stat-value" id="dash-savings-rate">0%</div><div class="stat-sub">target ≥20%</div></div>
+    </div>
+    <div class="period-toggle">
+      <button class="period-btn active" onclick="setPeriod('fortnight', this)">Fortnightly</button>
+      <button class="period-btn" onclick="setPeriod('month', this)">Monthly</button>
+      <button class="period-btn" onclick="setPeriod('year', this)">Yearly</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Income vs Spending</div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent3)"></div>Income</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div>Expenses</div>
+      </div>
+      <div class="chart-container" id="mainChart"><div style="color:var(--muted);font-size:13px;margin:auto;">Enter income & expenses to see chart</div></div>
+    </div>
+    <div class="card"><div class="card-title">Where It's Going</div><div id="categoryBreakdown"><div style="color:var(--muted);font-size:13px;">No expenses entered yet</div></div></div>
+    <div class="card"><div class="card-title">Financial Check</div><div id="recommendations"><div style="color:var(--muted);font-size:13px;">Enter your income and expenses for personalised advice</div></div></div>
+  </div>
+
+  <!-- INCOME -->
+  <div class="screen" id="screen-income">
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(67,233,123,0.15)">💼</div>
+        <div class="section-title">Chris' Income</div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Wage (fortnightly)</label>
+        <div class="input-row"><span class="input-prefix">$</span><input type="number" inputmode="decimal" placeholder="0.00" id="chris-base" oninput="recalc()"></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Other Income (fortnightly)</label>
+        <div class="input-row"><span class="input-prefix">$</span><input type="number" inputmode="decimal" placeholder="0.00" id="chris-other" oninput="recalc()"></div>
+      </div>
+      <div class="forecast-row"><div class="forecast-label">Chris' Annual Income</div><div class="forecast-num neutral" id="chris-annual">$0</div></div>
+    </div>
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(255,101,132,0.15)">💼</div>
+        <div class="section-title">Saua's Income</div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Wage (fortnightly)</label>
+        <div class="input-row"><span class="input-prefix">$</span><input type="number" inputmode="decimal" placeholder="0.00" id="saua-wage" oninput="recalc()"></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Other Income (fortnightly)</label>
+        <div class="input-row"><span class="input-prefix">$</span><input type="number" inputmode="decimal" placeholder="0.00" id="saua-other" oninput="recalc()"></div>
+      </div>
+      <div class="forecast-row"><div class="forecast-label">Saua's Annual Income</div><div class="forecast-num neutral" id="saua-annual">$0</div></div>
+    </div>
+    <div class="card">
+      <div class="forecast-row"><div class="forecast-label" style="font-weight:600;color:var(--text)">Joint Fortnightly</div><div class="forecast-num positive" id="joint-fortnightly">$0</div></div>
+      <div class="forecast-row"><div class="forecast-label" style="font-weight:600;color:var(--text)">Joint Monthly</div><div class="forecast-num positive" id="joint-monthly">$0</div></div>
+      <div class="forecast-row"><div class="forecast-label" style="font-weight:600;color:var(--text)">Joint Annual</div><div class="forecast-num positive" id="joint-annual">$0</div></div>
+    </div>
+  </div>
+
+  <!-- EXPENSES -->
+  <div class="screen" id="screen-expenses">
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(108,99,255,0.15)">👤</div>
+        <div class="section-title">Chris' Expenses</div>
+        <div class="section-total" id="chris-exp-total">$0</div>
+      </div>
+      <div id="chris-expenses-list"></div>
+      <button class="add-btn" onclick="addExpense('chris')">+ Add expense</button>
+    </div>
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(255,101,132,0.15)">👤</div>
+        <div class="section-title">Saua's Expenses</div>
+        <div class="section-total" id="saua-exp-total">$0</div>
+      </div>
+      <div id="saua-expenses-list"></div>
+      <button class="add-btn" onclick="addExpense('saua')">+ Add expense</button>
+    </div>
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(247,151,30,0.15)">🏠</div>
+        <div class="section-title">Joint Expenses</div>
+        <div class="section-total" id="joint-exp-total">$0</div>
+      </div>
+      <div id="joint-expenses-list"></div>
+      <button class="add-btn" onclick="addExpense('joint')">+ Add expense</button>
+    </div>
+  </div>
+
+  <!-- DEBTS -->
+  <div class="screen" id="screen-debts">
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(108,99,255,0.15)">👤</div>
+        <div class="section-title">Chris' Debts</div>
+        <div class="section-total" id="chris-debt-total">$0</div>
+      </div>
+      <div id="chris-debts-list"></div>
+      <button class="add-btn" onclick="addDebt('chris')">+ Add debt</button>
+    </div>
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(255,101,132,0.15)">👤</div>
+        <div class="section-title">Saua's Debts</div>
+        <div class="section-total" id="saua-debt-total">$0</div>
+      </div>
+      <div id="saua-debts-list"></div>
+      <button class="add-btn" onclick="addDebt('saua')">+ Add debt</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Debt Summary</div>
+      <div class="forecast-row"><div class="forecast-label">Total Owed</div><div class="forecast-num negative" id="total-owed">$0</div></div>
+      <div class="forecast-row"><div class="forecast-label">Fortnightly Repayments</div><div class="forecast-num negative" id="total-repayments-fn">$0</div></div>
+      <div class="forecast-row"><div class="forecast-label">Annual Repayments</div><div class="forecast-num negative" id="total-repayments-yr">$0</div></div>
+    </div>
+  </div>
+
+  <!-- SURPLUS -->
+  <div class="screen" id="screen-surplus">
+    <div class="card">
+      <div class="card-title">Available Surplus</div>
+      <div class="surplus-amount" id="surplus-display">$0</div>
+      <div class="surplus-sub">per fortnight after all expenses & debts</div>
+    </div>
+    <div class="card">
+      <div class="card-title">How to Allocate It</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Expert recommended splits — adjust % to suit you</div>
+      <div id="allocations-list"></div>
+      <div class="forecast-row" style="margin-top:8px"><div class="forecast-label">Total Allocated</div><div class="forecast-num" id="alloc-used">0%</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">What If?</div>
+      <div class="whatif-row">
+        <div class="whatif-title">💡 Extra savings scenario</div>
+        <div class="whatif-input-row">
+          <span class="whatif-text">If I save an extra $</span>
+          <input class="whatif-input" type="number" inputmode="decimal" id="whatif-input" value="50" oninput="calcWhatIf()">
+          <span class="whatif-text">/ fortnight...</span>
+        </div>
+        <div class="whatif-result" id="whatif-result">That's $0 extra per year</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORECAST -->
+  <div class="screen" id="screen-forecast">
+    <div class="card">
+      <div class="card-title">Financial Forecast</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Based on current income & spending</div>
+      <div class="forecast-row">
+        <div class="forecast-label">Total Income</div>
+        <div class="forecast-values">
+          <div class="forecast-val"><div class="forecast-period">Fortn.</div><div class="forecast-num positive" id="fc-income-fn">$0</div></div>
+          <div class="forecast-val"><div class="forecast-period">Month</div><div class="forecast-num positive" id="fc-income-mo">$0</div></div>
+          <div class="forecast-val"><div class="forecast-period">Year</div><div class="forecast-num positive" id="fc-income-yr">$0</div></div>
+        </div>
+      </div>
+      <div class="forecast-row">
+        <div class="forecast-label">Total Expenses</div>
+        <div class="forecast-values">
+          <div class="forecast-val"><div class="forecast-period">Fortn.</div><div class="forecast-num negative" id="fc-exp-fn">$0</div></div>
+          <div class="forecast-val"><div class="forecast-period">Month</div><div class="forecast-num negative" id="fc-exp-mo">$0</div></div>
+          <div class="forecast-val"><div class="forecast-period">Year</div><div class="forecast-num negative" id="fc-exp-yr">$0</div></div>
+        </div>
+      </div>
+      <div class="forecast-row">
+        <div class="forecast-label">Surplus / Deficit</div>
+        <div class="forecast-values">
+          <div class="forecast-val"><div class="forecast-period">Fortn.</div><div class="forecast-num" id="fc-sur-fn">$0</div></div>
+          <div class="forecast-val"><div class="forecast-period">Month</div><div class="forecast-num" id="fc-sur-mo">$0</div></div>
+          <div class="forecast-val"><div class="forecast-period">Year</div><div class="forecast-num" id="fc-sur-yr">$0</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">Annual Cost Per Category</div><div id="annual-category-list"><div style="color:var(--muted);font-size:13px;">Enter expenses to see annual breakdown</div></div></div>
+    <div class="card">
+      <div class="card-title">Savings Projection</div>
+      <div class="forecast-row"><div class="forecast-label">If you save 20% of income</div><div class="forecast-num positive" id="save-20-yr">$0/yr</div></div>
+      <div class="forecast-row"><div class="forecast-label">Emergency fund (3 months expenses)</div><div class="forecast-num neutral" id="emerg-fund">$0 needed</div></div>
+      <div class="forecast-row"><div class="forecast-label">Time to reach emergency fund</div><div class="forecast-num neutral" id="emerg-time">— months</div></div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="screen" id="screen-history">
+    <div class="card">
+      <div class="card-title">Fortnight Log</div>
+      <div id="history-list"><div style="color:var(--muted);font-size:13px;">Save your first fortnight to start building history</div></div>
+    </div>
+  </div>
+
+</div>
+
+<button class="save-btn" onclick="saveFortnight()">Save Fortnight</button>
+<div class="toast" id="toast"></div>
+
+<!-- Emoji picker -->
+<div class="emoji-overlay" id="emojiOverlay" onclick="closeEmojiPicker()"></div>
+<div class="emoji-picker" id="emojiPicker">
+  <div class="emoji-picker-title">Choose an icon</div>
+  <div class="emoji-grid" id="emojiGrid"></div>
+</div>
+
+<!-- Fortnight modal -->
+<div class="modal-overlay" id="fortnightModal">
+  <div class="modal-sheet">
+    <div class="modal-title">Select Fortnight</div>
+    <div id="fortnightOptions"></div>
+    <button class="modal-btn cancel" onclick="closeFortnightModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+const EMOJIS = ['🎵','▶️','📺','📦','💨','💳','🏠','⚡','🔥','📶','📱','🛒','🍔','🍕','⛽','🚗','🛡️','🏥','💊','👕','✂️','🎁','🎮','🎬','🎧','☕','🍺','🏋️','📚','✈️','🌴','🐶','🐱','🚌','🚲','🏪','💄','🪥','🧴','🧹','🛁','🌙','☀️','💡','🔧','📝','💰','🏦','📊','🎯','🎪','🎨','🍱','🥗','🍜','🛍️','👶','🎓','🏡','🌿','💪','🧘','🎻','🎹','🎸'];
+
+let emojiTarget = null;
+
+function openEmojiPicker(who, idx) {
+  emojiTarget = { who, idx };
+  const grid = document.getElementById('emojiGrid');
+  grid.innerHTML = '';
+  EMOJIS.forEach(e => {
+    const btn = document.createElement('button');
+    btn.className = 'emoji-opt';
+    btn.textContent = e;
+    btn.onclick = () => selectEmoji(e);
+    grid.appendChild(btn);
+  });
+  document.getElementById('emojiPicker').classList.add('open');
+  document.getElementById('emojiOverlay').classList.add('open');
+}
+
+function selectEmoji(e) {
+  if (!emojiTarget) return;
+  const { who, idx } = emojiTarget;
+  state.expenses[who][idx].icon = e;
+  closeEmojiPicker();
+  renderExpenses(who);
+  recalc();
+}
+
+function closeEmojiPicker() {
+  document.getElementById('emojiPicker').classList.remove('open');
+  document.getElementById('emojiOverlay').classList.remove('open');
+  emojiTarget = null;
+}
+
+// ── STATE ──
+let state = {
+  currentFortnight: getCurrentFortnightLabel(),
+  period: 'fortnight',
+  income: { chrisBase: 0, chrisOther: 0, sauaWage: 0, sauaOther: 0 },
+  expenses: { chris: [], saua: [], joint: [] },
+  debts: { chris: [], saua: [] },
+  allocations: [
+    { label: 'Emergency Fund', pct: 10, color: '#ffa502' },
+    { label: 'Short-term Savings', pct: 10, color: '#43e97b' },
+    { label: 'Holidays / Travel', pct: 5, color: '#6c63ff' },
+    { label: 'Extra Debt Payoff', pct: 5, color: '#ff6584' },
+    { label: 'Investments', pct: 5, color: '#1e90ff' },
+    { label: 'Lifestyle / Free', pct: 5, color: '#a29bfe' },
+  ],
+  history: []
+};
+
+const sharedExpenses = () => [
+  { name: 'Spotify', icon: '🎵', amt: '', freq: 'monthly', cat: 'Subscriptions' },
+  { name: 'YouTube Premium', icon: '▶️', amt: '', freq: 'monthly', cat: 'Subscriptions' },
+  { name: 'Netflix', icon: '🎬', amt: '', freq: 'monthly', cat: 'Subscriptions' },
+  { name: 'Amazon Prime', icon: '📦', amt: '', freq: 'monthly', cat: 'Subscriptions' },
+  { name: 'Afterpay / Zip', icon: '💳', amt: '', freq: 'fortnightly', cat: 'Debts' },
+  { name: 'Vaping', icon: '💨', amt: '', freq: 'fortnightly', cat: 'Personal' },
+  { name: 'Personal spending', icon: '💳', amt: '', freq: 'fortnightly', cat: 'Personal' },
+  { name: '', icon: '📝', amt: '', freq: 'monthly', cat: 'Subscriptions' },
+  { name: '', icon: '📝', amt: '', freq: 'fortnightly', cat: 'Other' },
+];
+
+const defaultJoint = () => [
+  { name: 'Rent', icon: '🏠', amt: '', freq: 'fortnightly', cat: 'Housing' },
+  { name: 'Electricity', icon: '⚡', amt: '', freq: 'monthly', cat: 'Bills' },
+  { name: 'Gas', icon: '🔥', amt: '', freq: 'monthly', cat: 'Bills' },
+  { name: 'Internet', icon: '📶', amt: '', freq: 'monthly', cat: 'Bills' },
+  { name: 'Groceries', icon: '🛒', amt: '', freq: 'fortnightly', cat: 'Food' },
+  { name: 'Eating Out', icon: '🍔', amt: '', freq: 'fortnightly', cat: 'Food' },
+  { name: 'Fuel / Petrol', icon: '⛽', amt: '', freq: 'fortnightly', cat: 'Transport' },
+  { name: 'Car Repayment', icon: '🚗', amt: '', freq: 'fortnightly', cat: 'Transport' },
+  { name: 'Car Insurance', icon: '🛡️', amt: '', freq: 'monthly', cat: 'Insurance' },
+  { name: 'Home Insurance', icon: '🏡', amt: '', freq: 'monthly', cat: 'Insurance' },
+  { name: 'Health Insurance', icon: '🏥', amt: '', freq: 'monthly', cat: 'Insurance' },
+  { name: 'Medical / Pharmacy', icon: '💊', amt: '', freq: 'fortnightly', cat: 'Health' },
+  { name: 'Clothing', icon: '👕', amt: '', freq: 'monthly', cat: 'Lifestyle' },
+  { name: 'Haircuts / Grooming', icon: '✂️', amt: '', freq: 'monthly', cat: 'Personal' },
+  { name: 'Gifts / Birthdays', icon: '🎁', amt: '', freq: 'monthly', cat: 'Lifestyle' },
+  { name: 'Entertainment', icon: '🎮', amt: '', freq: 'fortnightly', cat: 'Lifestyle' },
+  { name: '', icon: '📝', amt: '', freq: 'fortnightly', cat: 'Other' },
+  { name: '', icon: '📝', amt: '', freq: 'fortnightly', cat: 'Other' },
+];
+
+function init() {
+  loadFromStorage();
+  if (state.expenses.chris.length === 0) {
+    state.expenses.chris = sharedExpenses();
+    state.expenses.saua = sharedExpenses();
+    state.expenses.joint = defaultJoint();
+  }
+  if (!state.debts || Array.isArray(state.debts)) state.debts = { chris: [], saua: [] };
+  renderAll();
+  renderAllocations();
+  renderHistory();
+}
+
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbw-hjVbnjv76VZse5NzJGJQCcAtZV239ZBRu71X9fPZ8GoD8x4WwU3m5_VKRHu-xzQT/exec';
+let syncTimeout = null;
+let lastSyncedHash = null;
+
+function saveToStorage() {
+  // Always save locally as backup
+  try { localStorage.setItem('budgetStateV2', JSON.stringify(state)); } catch(e) {}
+  // Debounce cloud sync — wait 1.5s after last change before pushing
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(pushToSheet, 1500);
+}
+
+function pushToSheet() {
+  const payload = JSON.stringify(state);
+  const hash = btoa(payload.substring(0, 100));
+  if (hash === lastSyncedHash) return;
+  showSyncStatus('syncing');
+  fetch(SHEET_URL, {
+    method: 'POST',
+    body: payload,
+    headers: { 'Content-Type': 'text/plain' }
+  })
+  .then(r => r.text())
+  .then(() => { lastSyncedHash = hash; showSyncStatus('saved'); })
+  .catch(() => showSyncStatus('error'));
+}
+
+function loadFromStorage() {
+  // Load local first for instant startup
+  try {
+    const s = localStorage.getItem('budgetStateV2');
+    if (s) state = { ...state, ...JSON.parse(s) };
+  } catch(e) {}
+  // Then fetch latest from sheet and merge if newer
+  showSyncStatus('loading');
+  fetch(SHEET_URL)
+  .then(r => r.text())
+  .then(text => {
+    if (!text || text === '{}') { showSyncStatus('ready'); return; }
+    try {
+      const remote = JSON.parse(text);
+      if (remote && remote.income) {
+        state = { ...state, ...remote };
+        renderAll();
+        renderAllocations();
+        renderHistory();
+        showSyncStatus('ready');
+      }
+    } catch(e) { showSyncStatus('ready'); }
+  })
+  .catch(() => showSyncStatus('offline'));
+}
+
+function showSyncStatus(status) {
+  const badge = document.getElementById('fortnightLabel');
+  if (!badge) return;
+  const msgs = { loading:'⏳ Loading...', syncing:'🔄 Syncing...', saved:'☁️ Synced', error:'⚠️ Sync failed', offline:'📴 Offline', ready: '📅 ' + state.currentFortnight };
+  if (status !== 'ready') {
+    badge.textContent = msgs[status];
+    if (status === 'saved') setTimeout(() => { badge.textContent = '📅 ' + state.currentFortnight; }, 2000);
+  } else {
+    badge.textContent = '📅 ' + state.currentFortnight;
+  }
+}
+
+function getCurrentFortnightLabel() {
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(start.getDate() - start.getDay());
+  const end = new Date(start);
+  end.setDate(end.getDate() + 13);
+  return formatDate(start) + ' – ' + formatDate(end);
+}
+
+function formatDate(d) {
+  return d.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+}
+
+function setFortnightLabel() {
+  document.getElementById('fortnightLabel').textContent = '📅 ' + state.currentFortnight;
+}
+
+function openFortnightModal() {
+  const opts = document.getElementById('fortnightOptions');
+  opts.innerHTML = '';
+  const now = new Date();
+  for (let i = -1; i < 5; i++) {
+    const start = new Date(now);
+    start.setDate(start.getDate() - start.getDay() + (i * 14));
+    const end = new Date(start);
+    end.setDate(end.getDate() + 13);
+    const label = formatDate(start) + ' – ' + formatDate(end);
+    const btn = document.createElement('button');
+    btn.className = 'modal-btn';
+    btn.textContent = (i === 0 ? '✓ ' : '') + label;
+    btn.onclick = () => { state.currentFortnight = label; setFortnightLabel(); closeFortnightModal(); };
+    opts.appendChild(btn);
+  }
+  document.getElementById('fortnightModal').classList.add('open');
+}
+
+function closeFortnightModal() { document.getElementById('fortnightModal').classList.remove('open'); }
+
+function showScreen(id, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'forecast') renderForecast();
+  if (id === 'surplus') renderSurplus();
+  if (id === 'history') renderHistory();
+}
+
+function setPeriod(p, btn) {
+  state.period = p;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDashboard();
+}
+
+function toFortnightly(amt, freq) {
+  const a = parseFloat(amt) || 0;
+  if (freq === 'weekly') return a * 2;
+  if (freq === 'fortnightly') return a;
+  if (freq === 'monthly') return a / (26/12);
+  if (freq === 'yearly') return a / 26;
+  return a;
+}
+
+function getTotalIncome() {
+  return (parseFloat(document.getElementById('chris-base')?.value) || 0)
+       + (parseFloat(document.getElementById('chris-other')?.value) || 0)
+       + (parseFloat(document.getElementById('saua-wage')?.value) || 0)
+       + (parseFloat(document.getElementById('saua-other')?.value) || 0);
+}
+
+function getExpensesFN(who) {
+  return state.expenses[who].reduce((s, e) => s + toFortnightly(e.amt, e.freq), 0);
+}
+
+function getTotalExpensesFN() {
+  return getExpensesFN('chris') + getExpensesFN('saua') + getExpensesFN('joint');
+}
+
+function getDebtRepaymentsFN(who) {
+  const arr = who ? state.debts[who] : [...(state.debts.chris||[]), ...(state.debts.saua||[])];
+  return arr.reduce((s, d) => s + toFortnightly(d.payment, d.payFreq), 0);
+}
+
+function getSurplus() {
+  return getTotalIncome() - getTotalExpensesFN() - getDebtRepaymentsFN();
+}
+
+function fmt(n) {
+  const abs = Math.abs(n);
+  const s = '$' + abs.toLocaleString('en-AU', { maximumFractionDigits: 0 });
+  return n < 0 ? '-' + s : s;
+}
+
+function fmtPct(n) { return (n || 0).toFixed(1) + '%'; }
+
+function recalc() {
+  state.income.chrisBase = parseFloat(document.getElementById('chris-base')?.value) || 0;
+  state.income.chrisOther = parseFloat(document.getElementById('chris-other')?.value) || 0;
+  state.income.sauaWage = parseFloat(document.getElementById('saua-wage')?.value) || 0;
+  state.income.sauaOther = parseFloat(document.getElementById('saua-other')?.value) || 0;
+
+  const chrisTotal = state.income.chrisBase + state.income.chrisOther;
+  const sauaTotal = state.income.sauaWage + state.income.sauaOther;
+  const jointFN = chrisTotal + sauaTotal;
+
+  document.getElementById('chris-annual').textContent = fmt(chrisTotal * 26);
+  document.getElementById('saua-annual').textContent = fmt(sauaTotal * 26);
+  document.getElementById('joint-fortnightly').textContent = fmt(jointFN);
+  document.getElementById('joint-monthly').textContent = fmt(jointFN * 26/12);
+  document.getElementById('joint-annual').textContent = fmt(jointFN * 26);
+
+  ['chris','saua','joint'].forEach(who => {
+    const t = getExpensesFN(who);
+    const el = document.getElementById(who + '-exp-total');
+    if (el) el.textContent = fmt(t);
+  });
+
+  // Debt totals
+  let totalOwed = 0, totalRepFN = 0;
+  ['chris','saua'].forEach(who => {
+    let whoTotal = 0;
+    (state.debts[who]||[]).forEach((d, i) => {
+      totalOwed += parseFloat(d.totalOwed) || 0;
+      const repFN = toFortnightly(d.payment, d.payFreq);
+      totalRepFN += repFN;
+      whoTotal += repFN;
+      const el = document.getElementById('debt-payoff-' + who + '-' + i);
+      const owed = parseFloat(d.totalOwed) || 0;
+      if (el && repFN > 0 && owed > 0) {
+        const months = Math.ceil(owed / (repFN * 26/12));
+        const yrs = Math.floor(months/12); const mo = months % 12;
+        el.textContent = '📅 Paid off in ~' + (yrs > 0 ? yrs + 'yr ' : '') + (mo > 0 ? mo + 'mo' : '');
+      } else if (el) el.textContent = '';
+    });
+    const dtEl = document.getElementById(who + '-debt-total');
+    if (dtEl) dtEl.textContent = fmt(whoTotal * 26/12);
+  });
+
+  const toEl = document.getElementById('total-owed');
+  if (toEl) {
+    toEl.textContent = fmt(totalOwed);
+    document.getElementById('total-repayments-fn').textContent = fmt(totalRepFN);
+    document.getElementById('total-repayments-yr').textContent = fmt(totalRepFN * 26);
+  }
+
+  renderDashboard();
+  renderSurplus();
+  calcWhatIf();
+  saveToStorage();
+}
+
+function renderDashboard() {
+  const income = getTotalIncome();
+  const expenses = getTotalExpensesFN() + getDebtRepaymentsFN();
+  const surplus = income - expenses;
+  const savingsRate = income > 0 ? (surplus / income * 100) : 0;
+  const mult = state.period === 'fortnight' ? 1 : state.period === 'month' ? 26/12 : 26;
+  const periodLabel = state.period === 'fortnight' ? 'fortnightly' : state.period === 'month' ? 'monthly' : 'annually';
+
+  document.getElementById('dash-income').textContent = fmt(income * mult);
+  document.getElementById('dash-expenses').textContent = fmt(expenses * mult);
+  document.getElementById('dash-surplus').textContent = fmt(surplus * mult);
+  document.getElementById('dash-savings-rate').textContent = fmtPct(savingsRate);
+  ['dash-income-period','dash-expenses-period','dash-surplus-period'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = periodLabel;
+  });
+  const srEl = document.getElementById('dash-savings-rate');
+  if (srEl) srEl.style.color = savingsRate >= 20 ? 'var(--accent3)' : savingsRate >= 10 ? 'var(--accent4)' : 'var(--accent2)';
+
+  renderChart(income * mult, expenses * mult);
+  renderCategoryBreakdown(expenses * mult, income * mult);
+  renderRecommendations(income, expenses, surplus, savingsRate);
+}
+
+function renderChart(income, expenses) {
+  const chart = document.getElementById('mainChart');
+  if (income === 0 && expenses === 0) {
+    chart.innerHTML = '<div style="color:var(--muted);font-size:13px;margin:auto;">Enter income & expenses to see chart</div>';
+    return;
+  }
+  const items = [];
+  for (let i = Math.max(0, state.history.length - 5); i < state.history.length; i++) {
+    const h = state.history[i];
+    const mult = state.period === 'fortnight' ? 1 : state.period === 'month' ? 26/12 : 26;
+    items.push({ label: h.label.split('–')[0].trim(), income: h.income*mult, expenses: h.expenses*mult });
+  }
+  items.push({ label: 'Now', income, expenses });
+  const maxVal = Math.max(...items.map(i => Math.max(i.income, i.expenses)), 1);
+  chart.innerHTML = '';
+  items.forEach(item => {
+    const g = document.createElement('div'); g.className = 'chart-bar-group';
+    const bars = document.createElement('div'); bars.className = 'chart-bars';
+    const ib = document.createElement('div'); ib.className = 'chart-bar income-bar';
+    ib.style.height = Math.max((item.income/maxVal)*150, 2) + 'px';
+    const eb = document.createElement('div'); eb.className = 'chart-bar expense-bar';
+    eb.style.height = Math.max((item.expenses/maxVal)*150, 2) + 'px';
+    bars.appendChild(ib); bars.appendChild(eb);
+    const lbl = document.createElement('div'); lbl.className = 'chart-label'; lbl.textContent = item.label;
+    g.appendChild(bars); g.appendChild(lbl); chart.appendChild(g);
+  });
+}
+
+function renderCategoryBreakdown(totalExpenses, income) {
+  const el = document.getElementById('categoryBreakdown');
+  if (totalExpenses === 0) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">No expenses entered yet</div>'; return; }
+  const mult = state.period === 'fortnight' ? 1 : state.period === 'month' ? 26/12 : 26;
+  const cats = {};
+  const allExp = [...state.expenses.chris, ...state.expenses.saua, ...state.expenses.joint];
+  allExp.forEach(e => {
+    const fn = toFortnightly(e.amt, e.freq) * mult;
+    if (fn > 0) { const cat = e.cat || 'Other'; cats[cat] = (cats[cat] || 0) + fn; }
+  });
+  const debtFN = getDebtRepaymentsFN() * mult;
+  if (debtFN > 0) cats['Debts'] = (cats['Debts'] || 0) + debtFN;
+  const colors = { 'Housing':'#6c63ff','Food':'#43e97b','Transport':'#ffa502','Bills':'#1e90ff','Insurance':'#a29bfe','Subscriptions':'#ff6584','Personal':'#f7971e','Health':'#00b894','Lifestyle':'#fd79a8','Debts':'#d63031','Other':'#636e72' };
+  const sorted = Object.entries(cats).sort((a,b) => b[1]-a[1]);
+  el.innerHTML = '';
+  sorted.forEach(([cat, amt]) => {
+    const pct = income > 0 ? (amt/(income)*100) : 0;
+    const row = document.createElement('div'); row.className = 'category-row';
+    row.innerHTML = `<div class="category-name">${cat}</div><div class="category-bar-track"><div class="category-bar-fill" style="width:${Math.min(pct*2,100)}%;background:${colors[cat]||'#636e72'}"></div></div><div class="category-pct">${fmtPct(pct)}</div><div class="category-amount">${fmt(amt)}</div>`;
+    el.appendChild(row);
+  });
+}
+
+function renderRecommendations(income, expenses, surplus, savingsRate) {
+  const el = document.getElementById('recommendations');
+  if (income === 0) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">Enter your income and expenses for personalised advice</div>'; return; }
+  const recs = [];
+  const getcat = cat => [...state.expenses.chris,...state.expenses.saua,...state.expenses.joint].filter(e=>e.cat===cat).reduce((s,e)=>s+toFortnightly(e.amt,e.freq),0);
+  const housing=getcat('Housing'), food=getcat('Food'), transport=getcat('Transport'), subs=getcat('Subscriptions');
+  const hP=income>0?housing/income*100:0, fP=income>0?food/income*100:0, tP=income>0?transport/income*100:0, sP=income>0?subs/income*100:0;
+  if (savingsRate < 0) recs.push({ icon:'🚨', title:'Spending exceeds income', desc:`You're spending ${fmt(Math.abs(surplus))} more than you earn per fortnight. Look at subscriptions, eating out, and discretionary spending first.`, tag:'reduce' });
+  else if (savingsRate < 10) recs.push({ icon:'⚠️', title:'Savings rate too low', desc:`At ${fmtPct(savingsRate)}, you're below the recommended 20%. Even $50–$100 extra per fortnight makes a big difference over time.`, tag:'warning' });
+  else if (savingsRate >= 20) recs.push({ icon:'✅', title:'Strong savings rate', desc:`${fmtPct(savingsRate)} — well done. Consider splitting between an emergency fund and a high-interest savings account.`, tag:'good' });
+  if (hP > 35) recs.push({ icon:'🏠', title:'Housing costs high', desc:`At ${fmtPct(hP)} of income, housing is above the recommended 30%. If rent is fixed, focus on reducing other areas.`, tag:'warning' });
+  if (fP > 18) recs.push({ icon:'🍔', title:'Food spending elevated', desc:`Food & eating out is ${fmtPct(fP)} of income. Meal planning and cutting takeaway 1–2 nights/week can save $100–$200 per fortnight.`, tag:'reduce' });
+  if (tP > 12) recs.push({ icon:'🚗', title:'Transport costs high', desc:`Transport is ${fmtPct(tP)} of income — above the 10% benchmark. Consider fuel efficiency or combining trips.`, tag:'warning' });
+  if (sP > 5) recs.push({ icon:'📱', title:'Review subscriptions', desc:`Subscriptions are ${fmtPct(sP)} of income — ${fmt(subs*26)} per year. Are you actively using every one?`, tag:'reduce' });
+  if (surplus > 0 && (state.debts.chris.length + state.debts.saua.length) > 0) recs.push({ icon:'💡', title:'Accelerate debt payoff', desc:`You have a surplus of ${fmt(surplus)} per fortnight. Putting extra toward your highest-interest debt saves significantly on interest.`, tag:'good' });
+  if (recs.length === 0) recs.push({ icon:'👍', title:'Looking balanced', desc:'Your spending looks reasonable. Keep tracking each fortnight to spot trends early.', tag:'good' });
+  el.innerHTML = recs.map(r=>`<div class="rec-item"><div class="rec-icon">${r.icon}</div><div class="rec-content"><div class="rec-title">${r.title}</div><div class="rec-desc">${r.desc}</div><span class="rec-tag ${r.tag}">${r.tag==='reduce'?'Reduce':r.tag==='warning'?'Watch':'Good'}</span></div></div>`).join('');
+}
+
+function renderExpenses(who) {
+  const list = document.getElementById(who + '-expenses-list');
+  if (!list) return;
+  list.innerHTML = '';
+  state.expenses[who].forEach((exp, i) => {
+    const div = document.createElement('div');
+    div.className = 'expense-item';
+    div.innerHTML = `
+      <div class="expense-top">
+        <button class="expense-icon-btn" onclick="openEmojiPicker('${who}', ${i})" title="Change icon">${exp.icon}</button>
+        <input class="expense-name-input" placeholder="Expense name" value="${exp.name}" oninput="state.expenses['${who}'][${i}].name=this.value;recalc()">
+        <button class="delete-btn" onclick="removeExpense('${who}',${i})">✕</button>
+      </div>
+      <div class="expense-amount-row">
+        <span class="expense-dollar">$</span>
+        <input class="expense-amount-input" type="number" inputmode="decimal" placeholder="0.00" value="${exp.amt}" oninput="state.expenses['${who}'][${i}].amt=this.value;recalc()">
+        <select class="expense-freq-select" onchange="state.expenses['${who}'][${i}].freq=this.value;recalc()">
+          <option value="weekly" ${exp.freq==='weekly'?'selected':''}>Weekly</option>
+          <option value="fortnightly" ${exp.freq==='fortnightly'?'selected':''}>Fortnightly</option>
+          <option value="monthly" ${exp.freq==='monthly'?'selected':''}>Monthly</option>
+          <option value="yearly" ${exp.freq==='yearly'?'selected':''}>Yearly</option>
+        </select>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+function addExpense(who) {
+  state.expenses[who].push({ name:'', icon:'📝', amt:'', freq:'fortnightly', cat:'Other' });
+  renderExpenses(who);
+  setTimeout(() => { const l=document.getElementById(who+'-expenses-list'); l?.lastChild?.scrollIntoView({behavior:'smooth',block:'center'}); }, 50);
+}
+
+function removeExpense(who, i) { state.expenses[who].splice(i,1); renderExpenses(who); recalc(); }
+
+function renderDebts(who) {
+  const list = document.getElementById(who + '-debts-list');
+  if (!list) return;
+  list.innerHTML = '';
+  (state.debts[who]||[]).forEach((d, i) => {
+    const div = document.createElement('div'); div.className = 'debt-item';
+    div.innerHTML = `
+      <div class="debt-name-row">
+        <input class="debt-input" placeholder="Debt name (e.g. Afterpay, Car loan)" value="${d.name}" oninput="state.debts['${who}'][${i}].name=this.value;recalc()">
+        <button class="delete-btn" onclick="removeDebt('${who}',${i})">✕</button>
+      </div>
+      <div class="debt-numbers">
+        <div class="mini-input-group">
+          <div class="mini-label">Total Owed</div>
+          <div style="display:flex;align-items:center;gap:4px"><span style="color:var(--muted);font-size:13px">$</span>
+          <input class="mini-input" type="number" inputmode="decimal" placeholder="0" value="${d.totalOwed}" oninput="state.debts['${who}'][${i}].totalOwed=this.value;recalc()"></div>
+        </div>
+        <div class="mini-input-group">
+          <div class="mini-label">Payment</div>
+          <div style="display:flex;align-items:center;gap:4px"><span style="color:var(--muted);font-size:13px">$</span>
+          <input class="mini-input" type="number" inputmode="decimal" placeholder="0" value="${d.payment}" oninput="state.debts['${who}'][${i}].payment=this.value;recalc()"></div>
+        </div>
+      </div>
+      <select class="expense-freq-select" style="width:100%" onchange="state.debts['${who}'][${i}].payFreq=this.value;recalc()">
+        <option value="weekly" ${d.payFreq==='weekly'?'selected':''}>Weekly</option>
+        <option value="fortnightly" ${d.payFreq==='fortnightly'?'selected':''}>Fortnightly</option>
+        <option value="monthly" ${d.payFreq==='monthly'?'selected':''}>Monthly</option>
+      </select>
+      <div class="debt-payoff" id="debt-payoff-${who}-${i}"></div>`;
+    list.appendChild(div);
+  });
+}
+
+function addDebt(who) {
+  if (!state.debts[who]) state.debts[who] = [];
+  state.debts[who].push({ name:'', totalOwed:'', payment:'', payFreq:'fortnightly' });
+  renderDebts(who); recalc();
+}
+
+function removeDebt(who, i) { state.debts[who].splice(i,1); renderDebts(who); recalc(); }
+
+function renderSurplus() {
+  const surplus = getSurplus();
+  const el = document.getElementById('surplus-display');
+  if (el) { el.textContent = fmt(surplus); el.style.color = surplus >= 0 ? 'var(--accent)' : 'var(--accent2)'; }
+  renderAllocationAmounts();
+}
+
+function renderAllocations() {
+  const list = document.getElementById('allocations-list');
+  if (!list) return;
+  list.innerHTML = '';
+  state.allocations.forEach((a, i) => {
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <div class="allocation-row">
+        <div class="alloc-dot" style="background:${a.color}"></div>
+        <div class="alloc-label">${a.label}</div>
+        <input class="alloc-pct-input" type="number" value="${a.pct}" min="0" max="100" oninput="state.allocations[${i}].pct=parseFloat(this.value)||0;renderAllocationAmounts();saveToStorage()">
+        <div class="alloc-amount" id="alloc-amt-${i}" style="color:${a.color}">$0</div>
+      </div>
+      <div class="alloc-bar-track"><div class="alloc-bar-fill" id="alloc-bar-${i}" style="background:${a.color};width:0%"></div></div>`;
+    list.appendChild(div);
+  });
+  renderAllocationAmounts();
+}
+
+function renderAllocationAmounts() {
+  const surplus = Math.max(getSurplus(), 0);
+  let totalPct = 0;
+  state.allocations.forEach((a, i) => {
+    totalPct += a.pct;
+    const amtEl = document.getElementById('alloc-amt-' + i);
+    const barEl = document.getElementById('alloc-bar-' + i);
+    if (amtEl) amtEl.textContent = fmt(surplus * (a.pct/100));
+    if (barEl) barEl.style.width = Math.min(a.pct, 100) + '%';
+  });
+  const usedEl = document.getElementById('alloc-used');
+  if (usedEl) { usedEl.textContent = fmtPct(totalPct); usedEl.style.color = totalPct > 100 ? 'var(--danger)' : totalPct === 100 ? 'var(--accent3)' : 'var(--text)'; }
+}
+
+function calcWhatIf() {
+  const extra = parseFloat(document.getElementById('whatif-input')?.value) || 0;
+  const el = document.getElementById('whatif-result');
+  if (el) el.textContent = `That's ${fmt(extra * 26)} extra per year saved 💰`;
+}
+
+function renderForecast() {
+  const income = getTotalIncome();
+  const expenses = getTotalExpensesFN() + getDebtRepaymentsFN();
+  const surplus = income - expenses;
+  const set = (id, val, type) => { const el=document.getElementById(id); if(!el)return; el.textContent=fmt(val); el.className='forecast-num '+(type||'neutral'); };
+  set('fc-income-fn', income, 'positive'); set('fc-income-mo', income*26/12, 'positive'); set('fc-income-yr', income*26, 'positive');
+  set('fc-exp-fn', expenses, 'negative'); set('fc-exp-mo', expenses*26/12, 'negative'); set('fc-exp-yr', expenses*26, 'negative');
+  const sc = surplus>=0?'positive':'negative';
+  set('fc-sur-fn', surplus, sc); set('fc-sur-mo', surplus*26/12, sc); set('fc-sur-yr', surplus*26, sc);
+  const save20El = document.getElementById('save-20-yr'); if(save20El) save20El.textContent = fmt(income*0.2*26)+'/yr';
+  const emergFund = expenses*26/12*3;
+  const efEl = document.getElementById('emerg-fund'); if(efEl) efEl.textContent = fmt(emergFund)+' needed';
+  const etEl = document.getElementById('emerg-time');
+  if (etEl) etEl.textContent = surplus > 0 ? Math.ceil(emergFund/(surplus*26/12))+' months' : 'Increase surplus first';
+  const catEl = document.getElementById('annual-category-list');
+  if (catEl) {
+    const cats = {};
+    const all = [...state.expenses.chris,...state.expenses.saua,...state.expenses.joint];
+    all.forEach(e => { const fn=toFortnightly(e.amt,e.freq); const name=e.name||e.cat||'Other'; if(fn>0) cats[name]=(cats[name]||0)+fn*26; });
+    const sorted = Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+    catEl.innerHTML = sorted.length===0 ? '<div style="color:var(--muted);font-size:13px;">Enter expenses to see annual breakdown</div>'
+      : sorted.map(([name,yr])=>`<div class="forecast-row"><div class="forecast-label">${name}</div><div class="forecast-num negative">${fmt(yr)}/yr</div></div>`).join('');
+  }
+}
+
+function saveFortnight() {
+  const income = getTotalIncome();
+  const expenses = getTotalExpensesFN() + getDebtRepaymentsFN();
+  const surplus = income - expenses;
+  const entry = { label: state.currentFortnight, income, expenses, surplus, savingsRate: income>0?(surplus/income*100):0, savedAt: new Date().toISOString() };
+  const idx = state.history.findIndex(h => h.label === state.currentFortnight);
+  if (idx >= 0) state.history[idx] = entry; else state.history.push(entry);
+  saveToStorage(); renderHistory(); showToast('Fortnight saved ✓');
+}
+
+function renderHistory() {
+  const el = document.getElementById('history-list');
+  if (!el) return;
+  if (state.history.length === 0) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">Save your first fortnight to start building history</div>'; return; }
+  const sorted = [...state.history].sort((a,b) => new Date(b.savedAt)-new Date(a.savedAt));
+  el.innerHTML = sorted.map(h=>`
+    <div class="history-item">
+      <div><div class="history-date">${h.label}</div><div class="history-sub">Income ${fmt(h.income)} · Expenses ${fmt(h.expenses)}</div></div>
+      <div><div class="history-surplus" style="color:${h.surplus>=0?'var(--accent3)':'var(--accent2)'}">${fmt(h.surplus)}</div><div style="font-size:11px;color:var(--muted);text-align:right">${fmtPct(h.savingsRate)}</div></div>
+    </div>`).join('');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function renderAll() {
+  if (state.income) {
+    const map = [['chrisBase','chris-base'],['chrisOther','chris-other'],['sauaWage','saua-wage'],['sauaOther','saua-other']];
+    map.forEach(([k,id]) => { const el=document.getElementById(id); if(el&&state.income[k]) el.value=state.income[k]; });
+  }
+  ['chris','saua','joint'].forEach(w => renderExpenses(w));
+  ['chris','saua'].forEach(w => renderDebts(w));
+  renderDashboard();
+  renderForecast();
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
