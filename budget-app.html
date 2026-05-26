@@ -552,12 +552,13 @@ function pushToSheet() {
   const hash = btoa(payload.substring(0, 100));
   if (hash === lastSyncedHash) return;
   showSyncStatus('syncing');
-  fetch(SHEET_URL, {
-    method: 'POST',
-    body: payload,
-    headers: { 'Content-Type': 'text/plain' }
+  // Use a form submission approach to avoid CORS issues
+  const form = new FormData();
+  form.append('data', payload);
+  fetch(SHEET_URL + '?data=' + encodeURIComponent(payload), {
+    method: 'GET',
+    mode: 'no-cors'
   })
-  .then(r => r.text())
   .then(() => { lastSyncedHash = hash; showSyncStatus('saved'); })
   .catch(() => showSyncStatus('error'));
 }
@@ -568,9 +569,9 @@ function loadFromStorage() {
     const s = localStorage.getItem('budgetStateV2');
     if (s) state = { ...state, ...JSON.parse(s) };
   } catch(e) {}
-  // Then fetch latest from sheet and merge if newer
+  // Then fetch latest from sheet
   showSyncStatus('loading');
-  fetch(SHEET_URL)
+  fetch(SHEET_URL + '?read=1')
   .then(r => r.text())
   .then(text => {
     if (!text || text === '{}') { showSyncStatus('ready'); return; }
@@ -581,8 +582,8 @@ function loadFromStorage() {
         renderAll();
         renderAllocations();
         renderHistory();
-        showSyncStatus('ready');
       }
+      showSyncStatus('ready');
     } catch(e) { showSyncStatus('ready'); }
   })
   .catch(() => showSyncStatus('offline'));
