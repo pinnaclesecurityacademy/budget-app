@@ -181,6 +181,41 @@
   .sync-bar.ready { color: transparent; min-height: 0; padding: 0; } bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #fff; border: none; border-radius: 50px; padding: 16px 40px; font-family: var(--font-display); font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 30px rgba(108,99,255,0.4); transition: all 0.2s; z-index: 100; letter-spacing: 0.5px; }
   .save-btn:active { transform: translateX(-50%) scale(0.96); }
 
+  /* ── SPEND TAB ── */
+  .spend-buffer-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 12px; }
+  .buffer-row { display: flex; justify-content: space-between; margin-bottom: 14px; }
+  .buffer-item { text-align: center; }
+  .buffer-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 4px; }
+  .buffer-val { font-family: var(--font-display); font-size: 18px; font-weight: 800; }
+  .buffer-val.green { color: var(--accent3); }
+  .buffer-val.orange { color: var(--warn); }
+  .buffer-val.red { color: var(--danger); }
+  .buffer-track { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; margin-bottom: 12px; }
+  .buffer-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease, background 0.4s ease; background: var(--accent3); }
+  .buffer-person-row { display: flex; gap: 10px; }
+  .buffer-person { flex: 1; display: flex; justify-content: space-between; align-items: center; background: var(--surface2); border-radius: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600; }
+  .buffer-person.chris { border-left: 3px solid var(--accent); }
+  .buffer-person.saua { border-left: 3px solid var(--accent2); }
+  .add-spend-btn { width: 100%; padding: 16px; border-radius: var(--radius); border: none; background: var(--accent); color: #fff; font-family: var(--font-display); font-size: 16px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px; box-shadow: 0 4px 20px rgba(108,99,255,0.3); transition: all 0.2s; }
+  .add-spend-btn:active { transform: scale(0.98); }
+  .spend-entry { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .spend-entry:last-child { border-bottom: none; }
+  .spend-entry-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .spend-entry-info { flex: 1; }
+  .spend-entry-name { font-size: 14px; font-weight: 500; }
+  .spend-entry-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .spend-entry-amount { font-family: var(--font-display); font-size: 16px; font-weight: 800; }
+  .spend-entry-amount.chris { color: var(--accent); }
+  .spend-entry-amount.saua { color: var(--accent2); }
+  .who-toggle { display: flex; gap: 8px; }
+  .who-btn { flex: 1; padding: 12px; border-radius: var(--radius-sm); border: 2px solid var(--border); background: transparent; color: var(--muted); font-family: var(--font-display); font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .who-btn.active.chris-active { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,0.1); }
+  .who-btn.active.saua-active { border-color: var(--accent2); color: var(--accent2); background: rgba(255,101,132,0.1); }
+  .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .cat-btn { padding: 8px 6px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .cat-btn .cat-emoji { font-size: 18px; display: block; margin-bottom: 2px; }
+  .cat-btn.active { border-color: var(--accent); color: var(--text); background: rgba(108,99,255,0.15); }
+
   .delete-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 4px; transition: color 0.2s; flex-shrink: 0; }
   .delete-btn:hover { color: var(--danger); }
 
@@ -218,6 +253,7 @@
     <button class="nav-btn active" onclick="showScreen('dashboard', this)">Dashboard</button>
     <button class="nav-btn" onclick="showScreen('income', this)">Income</button>
     <button class="nav-btn" onclick="showScreen('expenses', this)">Expenses</button>
+    <button class="nav-btn" onclick="showScreen('spend', this)">💸 Spend</button>
     <button class="nav-btn" onclick="showScreen('debts', this)">Debts</button>
     <button class="nav-btn" onclick="showScreen('surplus', this)">Surplus</button>
     <button class="nav-btn" onclick="showScreen('forecast', this)">Forecast</button>
@@ -412,6 +448,108 @@
       <div class="forecast-row"><div class="forecast-label">If you save 20% of income</div><div class="forecast-num positive" id="save-20-yr">$0/yr</div></div>
       <div class="forecast-row"><div class="forecast-label">Emergency fund (3 months expenses)</div><div class="forecast-num neutral" id="emerg-fund">$0 needed</div></div>
       <div class="forecast-row"><div class="forecast-label">Time to reach emergency fund</div><div class="forecast-num neutral" id="emerg-time">— months</div></div>
+    </div>
+  </div>
+
+  <!-- SPEND -->
+  <div class="screen" id="screen-spend">
+
+    <!-- Live buffer -->
+    <div class="spend-buffer-card" id="spendBufferCard">
+      <div class="buffer-row">
+        <div class="buffer-item">
+          <div class="buffer-label">Surplus</div>
+          <div class="buffer-val green" id="buf-surplus">$0</div>
+        </div>
+        <div class="buffer-item">
+          <div class="buffer-label">Ad Hoc Spent</div>
+          <div class="buffer-val" id="buf-spent">$0</div>
+        </div>
+        <div class="buffer-item">
+          <div class="buffer-label">Remaining</div>
+          <div class="buffer-val" id="buf-remaining">$0</div>
+        </div>
+      </div>
+      <div class="buffer-track">
+        <div class="buffer-fill" id="bufferFill"></div>
+      </div>
+      <div class="buffer-person-row">
+        <div class="buffer-person chris">
+          <span>👤 Chris</span>
+          <span id="buf-chris">$0</span>
+        </div>
+        <div class="buffer-person saua">
+          <span>👤 Saua</span>
+          <span id="buf-saua">$0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add spend button -->
+    <button class="add-spend-btn" onclick="openSpendForm()">+ Log a Spend</button>
+
+    <!-- Spend log -->
+    <div class="card" style="margin-top:12px">
+      <div class="card-title">This Fortnight</div>
+      <div id="spend-log">
+        <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0">No spends logged yet.<br>Tap + Log a Spend to start.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SPEND FORM SHEET -->
+  <div class="modal-overlay" id="spendFormOverlay">
+    <div class="modal-sheet" style="padding-bottom:30px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="modal-title">Log a Spend</div>
+        <button class="delete-btn" onclick="closeSpendForm()" style="font-size:20px">✕</button>
+      </div>
+
+      <!-- Who -->
+      <div style="margin-bottom:14px">
+        <div class="input-label">Who spent it?</div>
+        <div class="who-toggle">
+          <button class="who-btn active" id="who-chris" onclick="selectWho('chris')">👤 Chris</button>
+          <button class="who-btn" id="who-saua" onclick="selectWho('saua')">👤 Saua</button>
+        </div>
+      </div>
+
+      <!-- What + emoji -->
+      <div style="margin-bottom:14px">
+        <div class="input-label">What was it?</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="expense-icon-btn" id="spendEmojiBtn" onclick="openSpendEmojiPicker()" style="flex-shrink:0">🍔</button>
+          <div class="input-row" style="flex:1;margin:0">
+            <input type="text" placeholder="e.g. Maccas, Coffee..." id="spend-name" style="background:transparent;border:none;outline:none;color:var(--text);font-family:var(--font-body);font-size:16px;width:100%">
+          </div>
+        </div>
+      </div>
+
+      <!-- Amount -->
+      <div style="margin-bottom:14px">
+        <div class="input-label">Amount</div>
+        <div class="input-row">
+          <span class="input-prefix">$</span>
+          <input type="number" inputmode="decimal" placeholder="0.00" id="spend-amount" style="flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--font-display);font-size:24px;font-weight:800;width:100%">
+        </div>
+      </div>
+
+      <!-- Category -->
+      <div style="margin-bottom:14px">
+        <div class="input-label">Category</div>
+        <div class="cat-grid" id="catGrid"></div>
+      </div>
+
+      <!-- Date -->
+      <div style="margin-bottom:20px">
+        <div class="input-label">Date</div>
+        <div class="input-row">
+          <input type="date" id="spend-date" style="flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--font-body);font-size:15px;width:100%">
+        </div>
+      </div>
+
+      <button class="save-btn" style="position:relative;bottom:auto;left:auto;transform:none;width:100%" onclick="addSpend()">Add Spend</button>
     </div>
   </div>
 
@@ -696,6 +834,7 @@ function showScreen(id, btn) {
   if (id === 'forecast') renderForecast();
   if (id === 'surplus') renderSurplus();
   if (id === 'history') renderHistory();
+  if (id === 'spend') renderSpendTab();
 }
 
 function setPeriod(p, btn) {
@@ -735,7 +874,7 @@ function getDebtRepaymentsFN(who) {
 }
 
 function getSurplus() {
-  return getTotalIncome() - getTotalExpensesFN() - getDebtRepaymentsFN();
+  return getTotalIncome() - getTotalExpensesFN() - getDebtRepaymentsFN() - getAdhocTotal();
 }
 
 function fmt(n) {
@@ -1050,11 +1189,24 @@ function renderForecast() {
 function saveFortnight() {
   const income = getTotalIncome();
   const expenses = getTotalExpensesFN() + getDebtRepaymentsFN();
-  const surplus = income - expenses;
-  const entry = { label: state.currentFortnight, income, expenses, surplus, savingsRate: income>0?(surplus/income*100):0, savedAt: new Date().toISOString() };
+  const adhocTotal = getAdhocTotal();
+  const surplus = income - expenses - adhocTotal;
+  const entry = {
+    label: state.currentFortnight,
+    income,
+    expenses,
+    adhoc: adhocTotal,
+    chrisAdhoc: getAdhocTotal('chris'),
+    sauaAdhoc: getAdhocTotal('saua'),
+    surplus,
+    savingsRate: income > 0 ? (surplus/income*100) : 0,
+    savedAt: new Date().toISOString()
+  };
   const idx = state.history.findIndex(h => h.label === state.currentFortnight);
   if (idx >= 0) state.history[idx] = entry; else state.history.push(entry);
-  saveToStorage(); renderHistory(); showToast('Fortnight saved ✓');
+  // Archive adhoc entries (keep them but mark as saved)
+  (state.adhoc || []).forEach(s => { if (s.fortnight === state.currentFortnight) s.saved = true; });
+  saveToStorage(); renderHistory(); renderSpendTab(); showToast('Fortnight saved ✓');
 }
 
 function renderHistory() {
@@ -1084,6 +1236,194 @@ function renderAll() {
   recalc();
   renderDashboard();
   renderForecast();
+}
+
+// ══════════════════════════════════════════════
+// SPEND TAB
+// ══════════════════════════════════════════════
+const SPEND_CATS = [
+  { label: 'Takeaway', emoji: '🍔' },
+  { label: 'Coffee', emoji: '☕' },
+  { label: 'Groceries', emoji: '🛒' },
+  { label: 'Fuel', emoji: '⛽' },
+  { label: 'Shopping', emoji: '🛍️' },
+  { label: 'Entertainment', emoji: '🎮' },
+  { label: 'Drinks', emoji: '🍺' },
+  { label: 'Pharmacy', emoji: '💊' },
+  { label: 'Travel', emoji: '✈️' },
+  { label: 'Eating Out', emoji: '🍽️' },
+  { label: 'Personal', emoji: '💳' },
+  { label: 'Other', emoji: '📝' },
+];
+
+let spendWho = 'chris';
+let spendCat = SPEND_CATS[0];
+let spendEmoji = '🍔';
+
+function openSpendForm() {
+  spendWho = 'chris';
+  spendEmoji = '🍔';
+  spendCat = SPEND_CATS[0];
+  document.getElementById('spend-name').value = '';
+  document.getElementById('spend-amount').value = '';
+  document.getElementById('spend-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('spendEmojiBtn').textContent = spendEmoji;
+  document.getElementById('who-chris').className = 'who-btn active chris-active';
+  document.getElementById('who-saua').className = 'who-btn';
+  renderCatGrid();
+  document.getElementById('spendFormOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('spend-amount').focus(), 300);
+}
+
+function closeSpendForm() {
+  document.getElementById('spendFormOverlay').classList.remove('open');
+}
+
+function selectWho(who) {
+  spendWho = who;
+  document.getElementById('who-chris').className = who === 'chris' ? 'who-btn active chris-active' : 'who-btn';
+  document.getElementById('who-saua').className = who === 'saua' ? 'who-btn active saua-active' : 'who-btn';
+}
+
+function renderCatGrid() {
+  const grid = document.getElementById('catGrid');
+  grid.innerHTML = '';
+  SPEND_CATS.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn' + (cat.label === spendCat.label ? ' active' : '');
+    btn.innerHTML = `<span class="cat-emoji">${cat.emoji}</span>${cat.label}`;
+    btn.onclick = () => {
+      spendCat = cat;
+      spendEmoji = cat.emoji;
+      document.getElementById('spendEmojiBtn').textContent = spendEmoji;
+      renderCatGrid();
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function openSpendEmojiPicker() {
+  emojiTarget = { type: 'spend' };
+  const grid = document.getElementById('emojiGrid');
+  grid.innerHTML = '';
+  EMOJIS.forEach(e => {
+    const btn = document.createElement('button');
+    btn.className = 'emoji-opt';
+    btn.textContent = e;
+    btn.onclick = () => {
+      spendEmoji = e;
+      document.getElementById('spendEmojiBtn').textContent = e;
+      closeEmojiPicker();
+    };
+    grid.appendChild(btn);
+  });
+  document.getElementById('emojiPicker').classList.add('open');
+  document.getElementById('emojiOverlay').classList.add('open');
+}
+
+function addSpend() {
+  const name = document.getElementById('spend-name').value.trim();
+  const amount = parseFloat(document.getElementById('spend-amount').value) || 0;
+  const date = document.getElementById('spend-date').value;
+  if (amount <= 0) { showToast('Enter an amount'); return; }
+  if (!name) { showToast('Enter what it was'); return; }
+
+  if (!state.adhoc) state.adhoc = [];
+  state.adhoc.push({
+    id: Date.now(),
+    name,
+    emoji: spendEmoji,
+    cat: spendCat.label,
+    amount,
+    who: spendWho,
+    date,
+    fortnight: state.currentFortnight
+  });
+
+  closeSpendForm();
+  renderSpendTab();
+  recalc();
+  showToast('Spend logged ✓');
+}
+
+function removeSpend(id) {
+  state.adhoc = (state.adhoc || []).filter(s => s.id !== id);
+  renderSpendTab();
+  recalc();
+}
+
+function getCurrentAdhoc() {
+  return (state.adhoc || []).filter(s => s.fortnight === state.currentFortnight);
+}
+
+function getAdhocTotal(who) {
+  return getCurrentAdhoc().filter(s => !who || s.who === who).reduce((sum, s) => sum + s.amount, 0);
+}
+
+function renderSpendTab() {
+  const surplus = getSurplus();
+  const adhocTotal = getAdhocTotal();
+  const chrisTotal = getAdhocTotal('chris');
+  const sauaTotal = getAdhocTotal('saua');
+  const remaining = surplus - adhocTotal;
+  const pct = surplus > 0 ? Math.min(adhocTotal / surplus * 100, 100) : 0;
+
+  // Buffer card
+  const bufSurplus = document.getElementById('buf-surplus');
+  const bufSpent = document.getElementById('buf-spent');
+  const bufRemaining = document.getElementById('buf-remaining');
+  const bufFill = document.getElementById('bufferFill');
+  const bufChris = document.getElementById('buf-chris');
+  const bufSaua = document.getElementById('buf-saua');
+
+  if (bufSurplus) bufSurplus.textContent = fmt(surplus);
+  if (bufSpent) {
+    bufSpent.textContent = fmt(adhocTotal);
+    bufSpent.className = 'buffer-val' + (pct > 80 ? ' red' : pct > 50 ? ' orange' : '');
+  }
+  if (bufRemaining) {
+    bufRemaining.textContent = fmt(remaining);
+    bufRemaining.className = 'buffer-val' + (remaining < 0 ? ' red' : pct > 50 ? ' orange' : ' green');
+  }
+  if (bufFill) {
+    bufFill.style.width = pct + '%';
+    bufFill.style.background = pct > 80 ? 'var(--danger)' : pct > 50 ? 'var(--warn)' : 'var(--accent3)';
+  }
+  if (bufChris) bufChris.textContent = fmt(chrisTotal);
+  if (bufSaua) bufSaua.textContent = fmt(sauaTotal);
+
+  // Log
+  const log = document.getElementById('spend-log');
+  if (!log) return;
+  const entries = getCurrentAdhoc().sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  if (entries.length === 0) {
+    log.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0">No spends logged yet.<br>Tap + Log a Spend to start.</div>';
+    return;
+  }
+
+  log.innerHTML = '';
+  entries.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'spend-entry';
+    const bgColor = s.who === 'chris' ? 'rgba(108,99,255,0.15)' : 'rgba(255,101,132,0.15)';
+    div.innerHTML = `
+      <div class="spend-entry-icon" style="background:${bgColor}">${s.emoji}</div>
+      <div class="spend-entry-info">
+        <div class="spend-entry-name">${s.name}</div>
+        <div class="spend-entry-meta">${s.cat} · ${s.who === 'chris' ? 'Chris' : 'Saua'} · ${formatDisplayDate(s.date)}</div>
+      </div>
+      <div class="spend-entry-amount ${s.who}">${fmt(s.amount)}</div>
+      <button class="delete-btn" onclick="removeSpend(${s.id})">✕</button>
+    `;
+    log.appendChild(div);
+  });
+}
+
+function formatDisplayDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
 }
 
 window.addEventListener('DOMContentLoaded', init);
