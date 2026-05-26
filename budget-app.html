@@ -715,10 +715,10 @@ function toFortnightly(amt, freq) {
 }
 
 function getTotalIncome() {
-  return (parseFloat(document.getElementById('chris-base')?.value) || 0)
-       + (parseFloat(document.getElementById('chris-other')?.value) || 0)
-       + (parseFloat(document.getElementById('saua-wage')?.value) || 0)
-       + (parseFloat(document.getElementById('saua-other')?.value) || 0);
+  return (state.income.chrisBase || 0)
+       + (state.income.chrisOther || 0)
+       + (state.income.sauaWage || 0)
+       + (state.income.sauaOther || 0);
 }
 
 function getExpensesFN(who) {
@@ -747,20 +747,25 @@ function fmt(n) {
 function fmtPct(n) { return (n || 0).toFixed(1) + '%'; }
 
 function recalc() {
-  state.income.chrisBase = parseFloat(document.getElementById('chris-base')?.value) || 0;
-  state.income.chrisOther = parseFloat(document.getElementById('chris-other')?.value) || 0;
-  state.income.sauaWage = parseFloat(document.getElementById('saua-wage')?.value) || 0;
-  state.income.sauaOther = parseFloat(document.getElementById('saua-other')?.value) || 0;
+  // Pull from DOM if inputs are visible, otherwise use existing state
+  const cb = document.getElementById('chris-base');
+  const co = document.getElementById('chris-other');
+  const sw = document.getElementById('saua-wage');
+  const so = document.getElementById('saua-other');
+  if (cb) state.income.chrisBase = parseFloat(cb.value) || 0;
+  if (co) state.income.chrisOther = parseFloat(co.value) || 0;
+  if (sw) state.income.sauaWage = parseFloat(sw.value) || 0;
+  if (so) state.income.sauaOther = parseFloat(so.value) || 0;
 
   const chrisTotal = state.income.chrisBase + state.income.chrisOther;
   const sauaTotal = state.income.sauaWage + state.income.sauaOther;
   const jointFN = chrisTotal + sauaTotal;
 
-  document.getElementById('chris-annual').textContent = fmt(chrisTotal * 26);
-  document.getElementById('saua-annual').textContent = fmt(sauaTotal * 26);
-  document.getElementById('joint-fortnightly').textContent = fmt(jointFN);
-  document.getElementById('joint-monthly').textContent = fmt(jointFN * 26/12);
-  document.getElementById('joint-annual').textContent = fmt(jointFN * 26);
+  const caEl = document.getElementById('chris-annual'); if (caEl) caEl.textContent = fmt(chrisTotal * 26);
+  const saEl = document.getElementById('saua-annual'); if (saEl) saEl.textContent = fmt(sauaTotal * 26);
+  const jfEl = document.getElementById('joint-fortnightly'); if (jfEl) jfEl.textContent = fmt(jointFN);
+  const jmEl = document.getElementById('joint-monthly'); if (jmEl) jmEl.textContent = fmt(jointFN * 26/12);
+  const jaEl = document.getElementById('joint-annual'); if (jaEl) jaEl.textContent = fmt(jointFN * 26);
 
   ['chris','saua','joint'].forEach(who => {
     const t = getExpensesFN(who);
@@ -1076,6 +1081,7 @@ function renderAll() {
   }
   ['chris','saua','joint'].forEach(w => renderExpenses(w));
   ['chris','saua'].forEach(w => renderDebts(w));
+  recalc();
   renderDashboard();
   renderForecast();
 }
